@@ -7,6 +7,8 @@ import concurrent.futures
 import time
 # Move the OpenAI API key setup outside of the function for better performance.
 openai.api_key = os.getenv('OPENAI_KEY')
+DEV_KEY = os.getenv('DEV_KEY')
+
 
 @csrf_exempt
 def user_input(request):
@@ -15,30 +17,38 @@ def user_input(request):
         try:
             data = json.loads(request.body)
 
-            if 'model_role' in data and 'user_message' in data:
-                conversation = [
-                    {"role": "system", "content": data['model_role']},
-                    {"role": "user", "content":  data['user_message']}
-                ]
-                print(data)
-                # ai_output = get_ai_response(conversation)
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    # Default message if no response is received
-                    ai_output = "Timed out please try again"
-                    try:
-                        ai_output = executor.submit(
-                            get_ai_response, conversation).result(timeout=40)
-                    except concurrent.futures.TimeoutError:
-                        pass
-                response_data = {
-                    'answer': ai_output,
-                }
-                print("Response sent.", response_data)
-                return JsonResponse(response_data)
+            if 'model_role' in data and 'user_message' in data and 'key' in data:
+                if data['key'] == DEV_KEY:
+                    conversation = [
+                        {"role": "system", "content": data['model_role']},
+                        {"role": "user", "content":  data['user_message']}
+                    ]
+                    print(data)
+                    # ai_output = get_ai_response(conversation)
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        # Default message if no response is received
+                        ai_output = "Timed out please try again"
+                        try:
+                            ai_output = executor.submit(
+                                get_ai_response, conversation).result(timeout=40)
+                        except concurrent.futures.TimeoutError:
+                            pass
+                    response_data = {
+                        'answer': ai_output,
+                    }
+                    print("Response sent.", response_data)
+                    return JsonResponse(response_data)
+                else:
+                    response_data = {
+                        'error': 'Wrong key'
+                    }
+                    print("Invalid Key")
+                    return JsonResponse(response_data, status=200)
+
             else:
                 # Handle the case when required JSON data fields are missing.
                 response_data = {
-                    'error': 'Both "model_role" and "user_message" are required in the JSON data.'
+                    'error': '"model_role", "user_message" and "key" are required in the JSON data.'
                 }
                 print("Invalid JSON data: Missing required fields.")
                 return JsonResponse(response_data, status=200)
