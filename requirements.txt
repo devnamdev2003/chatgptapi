@@ -22,3 +22,4 @@ typing_extensions
 tzdata
 urllib3
 yarl
+google-generativeai

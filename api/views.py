@@ -5,7 +5,9 @@ import os
 import json
 import concurrent.futures
 import time
-# Move the OpenAI API key setup outside of the function for better performance.
+import google.generativeai as genai
+
+genai.configure(api_key=os.environ['GAPI_KEY'])
 openai.api_key = os.getenv('OPENAI_KEY')
 DEV_KEY = os.getenv('DEV_KEY')
 
@@ -75,15 +77,37 @@ def user_input(request):
         return JsonResponse(response_data, status=200)
 
 
+# def get_ai_response(conversation):
+#     print("Received a request to get AI response.")
+#     try:
+#         # Use the provided conversation in the OpenAI API request.
+#         completion = openai.chat.completions.create(
+#             model="gpt-3.5-turbo",
+#             messages=conversation
+#         )
+#         response_text = completion.choices[0].message.content
+#         # response_text = "hi how can i help you.."
+#         # time.sleep(3)
+#         # response_text = "hi how can i help you.."
+#         print("AI response received.")
+#         return response_text
+#     except Exception as e:
+#         # Handle OpenAI API errors and provide specific error message.
+#         response_data = {
+#             'error': f'OpenAI API error: {str(e)}'
+#         }
+#         print(f"OpenAI API error: {str(e)}")
+#         return response_data
+    
 def get_ai_response(conversation):
     print("Received a request to get AI response.")
     try:
-        # Use the provided conversation in the OpenAI API request.
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=conversation
-        )
-        response_text = completion.choices[0].message.content
+        text=f"{conversation[0]['content']}\n{conversation[1]['content']}"
+        print(text)
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(text)
+        response_text = response.text
+        # response_text = "hi how can i help you.."
         # time.sleep(3)
         # response_text = "hi how can i help you.."
         print("AI response received.")
