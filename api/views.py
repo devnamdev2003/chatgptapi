@@ -19,8 +19,7 @@ def user_input(request):
         try:
             data = json.loads(request.body)
 
-            if 'model_role' in data and 'user_message' in data and 'key' in data:
-                if data['key'] == DEV_KEY:
+            if 'model_role' in data and 'user_message' in data:
                     conversation = [
                         {"role": "system", "content": data['model_role']},
                         {"role": "user", "content":  data['user_message']}
@@ -40,17 +39,11 @@ def user_input(request):
                     }
                     print("Response sent.", response_data)
                     return JsonResponse(response_data)
-                else:
-                    response_data = {
-                        'error': 'Wrong key'
-                    }
-                    print("Invalid Key")
-                    return JsonResponse(response_data, status=200)
-
+                
             else:
                 # Handle the case when required JSON data fields are missing.
                 response_data = {
-                    'error': '"model_role", "user_message" and "key" are required in the JSON data.'
+                    'error': '"model_role", "user_message" are required in the JSON data.'
                 }
                 print("Invalid JSON data: Missing required fields.")
                 return JsonResponse(response_data, status=200)
