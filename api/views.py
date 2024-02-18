@@ -19,17 +19,41 @@ def user_input(request):
             data = json.loads(request.body)
             if 'model_role' in data and 'user_message' in data:
                 conversation = [
-                    {"role": "system", "content": data['model_role']},
-                    {"role": "user", "content":  data['user_message']}
-                ]
+                        {"role": "system", "content": data['model_role']},
+                        {"role": "user", "content":  data['user_message']}
+                    ]
                 print(data)
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    ai_output = "Timed out please try again"
-                    try:
-                        ai_output = executor.submit(
-                            get_ai_response_openai, conversation).result(timeout=40)
-                    except concurrent.futures.TimeoutError:
-                        pass
+                if 'ai' in data:
+                    if data['ai']=="google":
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            ai_output = "Timed out please try again"
+                            try:
+                                ai_output = executor.submit(
+                                    get_ai_response_google, conversation).result(timeout=40)
+                            except concurrent.futures.TimeoutError:
+                                pass
+                    elif data['ai']=="openai":
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            ai_output = "Timed out please try again"
+                            try:
+                                ai_output = executor.submit(
+                                    get_ai_response_openai, conversation).result(timeout=40)
+                            except concurrent.futures.TimeoutError:
+                                pass
+                    else:
+                        response_data = {
+                            'error': f"{data['ai']} ai does not exist"
+                        }
+                        print( f"{data['ai']} ai does not exist")
+                        return JsonResponse(response_data, status=200) 
+                else:
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        ai_output = "Timed out please try again"
+                        try:
+                            ai_output = executor.submit(
+                                get_ai_response_openai, conversation).result(timeout=40)
+                        except concurrent.futures.TimeoutError:
+                            pass
                 response_data = {
                     'answer': ai_output,
                 }
