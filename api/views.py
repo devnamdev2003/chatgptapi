@@ -6,8 +6,9 @@ import json
 import concurrent.futures
 import time
 import google.generativeai as genai
+from .models import UserQuery
 
-genai.configure(api_key=os.environ['GAPI_KEY'])
+genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
 openai.api_key = os.getenv('OPENAI_KEY')
 
 
@@ -51,12 +52,13 @@ def user_input(request):
                         ai_output = "Timed out please try again"
                         try:
                             ai_output = executor.submit(
-                                get_ai_response_openai, conversation).result(timeout=40)
+                                get_ai_response_google, conversation).result(timeout=40)
                         except concurrent.futures.TimeoutError:
                             pass
                 response_data = {
                     'answer': ai_output,
                 }
+                UserQuery.objects.create(user_query=conversation, ai_answer=ai_output)
                 print("Response sent.", response_data)
                 return JsonResponse(response_data)
             else:
@@ -106,7 +108,7 @@ def get_ai_response_openai(conversation):
 def get_ai_response_google(conversation):
     print("Received a request by google to get AI response.")
     try:
-        text = f"{conversation[0]['content']}\n{conversation[1]['content']}"
+        text = f"{conversation[1]['content']}\n{conversation[0]['content']}"
         print(text)
         model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(text)
@@ -114,8 +116,6 @@ def get_ai_response_google(conversation):
         print("AI response received.")
         return response_text
     except Exception as e:
-        response_data = {
-            'error': f'OpenAI API error: {str(e)}'
-        }
-        print(f"OpenAI API error: {str(e)}")
+        response_data = f'error: API error: {str(e)}'
+        print(f"API error: {str(e)}")
         return response_data
