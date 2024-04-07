@@ -5,7 +5,7 @@ venv/
 *.sqlite3
 
 # Ignore static files directory in development
-/staticfiles/
+
 
 # Ignore media files directory
 /media/
