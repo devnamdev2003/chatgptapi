@@ -21,5 +21,6 @@ tqdm
 typing_extensions
 tzdata
 urllib3
+whitenoise[brotli]
 yarl
 google-generativeai
